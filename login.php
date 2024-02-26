@@ -19,8 +19,11 @@ if(mysqli_num_rows($result) == 0) {
         echo 'Incorrect Password';
     } else {
         echo 'Login successful';
-        // Here you can redirect the user to another page or perform other actions upon successful login
-    }
+        session_start();
+        $_SESSION['email'] = $email;
+        header("Location: dashboard.php");
+        // route them to type specific dashboard
+        exit();    }
 }
 
 // Free result set
