@@ -25,7 +25,6 @@ if (mysqli_query($myconnection, $sql_account)) {
     echo "Account created successfully.";
 } else {
     echo "Error: " . $sql_account . "<br>" . mysqli_error($myconnection);
-    exit();
 }
 
 // Insert into student table
