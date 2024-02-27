@@ -8,7 +8,7 @@ $myconnection = mysqli_connect('localhost', 'root', '') or die ('Could not conne
 
 $mydb = mysqli_select_db($myconnection, 'db2') or die ('Could not select database');
 
-$query = "SELECT email, password FROM account WHERE email = '$email'";
+$query = "SELECT * FROM account WHERE email = '$email'";
 $result = mysqli_query($myconnection, $query) or die("Query Failed: " . mysqli_error($myconnection));
 
 if(mysqli_num_rows($result) == 0) {
@@ -18,12 +18,29 @@ if(mysqli_num_rows($result) == 0) {
     if($row['password'] != $password) {
         echo 'Incorrect Password';
     } else {
-        echo 'Login successful';
-        session_start();
-        $_SESSION['email'] = $email;
-        header("Location: dashboard.php");
-        // route them to type specific dashboard
-        exit();    }
+        if ($row['type'] == "admin"){
+            echo 'Login successful';
+            session_start();
+             $_SESSION['email'] = $email;
+            header("Location: admin_dashboard.php");
+            // route them to type specific dashboard
+            exit();
+        } elseif ($row['type'] == "instructor"){
+            echo 'Login successful';
+            session_start();
+             $_SESSION['email'] = $email;
+            header("Location: instructor_dashboard.php");
+            // route them to type specific dashboard
+            exit();
+        } else {
+            echo 'Login successful';
+            session_start();
+             $_SESSION['email'] = $email;
+            header("Location: dashboard.php");
+            // route them to type specific dashboard
+            exit();
+        }
+    }
 }
 
 // Free result set
