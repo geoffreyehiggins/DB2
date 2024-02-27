@@ -5,13 +5,6 @@
 
     $mydb = mysqli_select_db($myconnection, 'db2') or die ('Could not select database');
 
-    if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-        // Handle registration logic here
-        $courseId = $_POST['course_id'];
-        // Implement your registration logic, for example, insert into a registration table
-        echo "Registered for Course ID: $courseId";
-        exit;
-    }
     $query = "SELECT * FROM course";
     $result = mysqli_query($myconnection, $query) or die("Query Failed: " . mysqli_error($myconnection));
 ?>
@@ -57,7 +50,7 @@
                 echo "<td>{$row['course_id']}</td>";
                 echo "<td>{$row['course_name']}</td>";
                 echo "<td>{$row['credits']}</td>";
-                echo "<td><button type='submit' name='course_id' value='{$row['course_id']}'>Register</button></td>";
+                echo "<td><a href='class_registration.php?course_id={$row['course_id']}'>Register</a></td>";
                 echo "</tr>";
             }
         ?>
