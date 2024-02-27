@@ -35,6 +35,13 @@
     </form>
     <br>
     <h2> Taken Courses </h2>
+    <table border="1">
+        <tr>
+            <th>Course ID</th>
+            <th>Course Name</th>
+            <th>Credits</th> 
+        </tr>
+    </table>
     <h2> Available Courses </h2>
     <form method = "post">
     <table border="1">
