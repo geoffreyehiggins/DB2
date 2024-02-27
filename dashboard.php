@@ -20,5 +20,8 @@
         <input type="password" id="new_password" name="new_password"><br>
         <input type="submit" value="Change Password">
     </form>
+    <a href = "courses.php">
+            <button>Courses</button>
+        </a>
 </body>
 </html>
