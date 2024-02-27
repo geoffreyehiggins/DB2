@@ -45,6 +45,7 @@
                 echo "<td>{$row['semester']}</td>";
                 echo "<td>{$row['year']}</td>";
                 echo "</tr>";
+                //test
             }
         ?>
     </table>
