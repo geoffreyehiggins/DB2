@@ -7,6 +7,10 @@
 
     $query = "SELECT * FROM course";
     $result = mysqli_query($myconnection, $query) or die("Query Failed: " . mysqli_error($myconnection));
+    $query2 = "SELECT student_id FROM student WHERE email = '$email'";
+    $result2 = mysqli_query($myconnection,$query2) or die("Query Failed: " . mysqli_error($myconnection));
+    $student_id = mysqli_fetch_assoc($result2);
+    $_SESSION['student_id'] = $student_id;
 ?>
 
 <!DOCTYPE html>
@@ -17,6 +21,7 @@
 <body>
     <h2>Welcome to the Dashboard</h2>
     <p>Email: <?php echo $email; ?></p>
+    <p>ID: <?php echo $student_id['student_id']; ?></p>
 
     <h3>Change Password</h3>
     <form action="password_change.php" method="post">
