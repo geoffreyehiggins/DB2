@@ -4,13 +4,28 @@
     $myconnection = mysqli_connect('localhost', 'root', '') or die ('Could not connect: ' . mysqli_error());
 
     $mydb = mysqli_select_db($myconnection, 'db2') or die ('Could not select database');
-
+    $total_credits = 0;
+    $totalCredits = 0;
+    $totalGradePoints = 0;
+    $courseCount = 0;
     $query = "SELECT * FROM course";
     $result = mysqli_query($myconnection, $query) or die("Query Failed: " . mysqli_error($myconnection));
     $query2 = "SELECT student_id FROM student WHERE email = '$email'";
     $result2 = mysqli_query($myconnection,$query2) or die("Query Failed: " . mysqli_error($myconnection));
     $student_id = mysqli_fetch_assoc($result2);
+    $student_id = $student_id['student_id'];
     $_SESSION['student_id'] = $student_id;
+    $query3 = "SELECT take.course_id, take.year, take.semester, take.grade, course.course_name, course.credits
+           FROM take
+           INNER JOIN course ON take.course_id = course.course_id
+           WHERE take.student_id = '$student_id'";
+    $result3 = mysqli_query($myconnection, $query3) or die ("Query Failed: " . mysqli_error($myconnection));
+    
+    function convertPercentageToGPA($percentage) {
+        $gpa = $percentage/100;
+        $gpa = $gpa * 4;
+        return $gpa;
+    }
 ?>
 
 <!DOCTYPE html>
@@ -21,7 +36,7 @@
 <body>
     <h2>Welcome to the Dashboard</h2>
     <p>Email: <?php echo $email; ?></p>
-    <p>ID: <?php echo $student_id['student_id']; ?></p>
+    <p>ID: <?php echo $student_id; ?></p>
 
     <h3>Change Password</h3>
     <form action="password_change.php" method="post">
@@ -37,9 +52,39 @@
         <tr>
             <th>Course ID</th>
             <th>Course Name</th>
+            <th>Year</th>
+            <th>Semester</th>
+            <th>Grade</th>
             <th>Credits</th> 
         </tr>
+        
+        <?php
+        if (mysqli_num_rows($result3) > 0) {
+            while ($row = mysqli_fetch_assoc($result3)) {
+                $total_credits += $row['credits'];
+                $courseCount ++;
+                $gradePoints = convertPercentageToGPA($row['grade']);
+                $totalGradePoints += $gradePoints;
+                // Output each row as a table row
+                echo '<tr>';
+                echo '<td>' . $row['course_id'] . '</td>';
+                echo '<td>' . $row['course_name'] . '</td>';
+                echo '<td>' . $row['year'] . '</td>';
+                echo '<td>' . $row['semester'] . '</td>';
+                echo '<td>' . $row['grade'] . '</td>';
+                echo '<td>' . $row['credits'] . '</td>';
+                echo '</tr>';
+            }
+        }
+        
+        ?>
     </table>
+    <h2> Credits and GPA </h2>
+    <?php
+        echo 'Total Credits Taken: ' . $total_credits . '<br/>';
+        $averageGPA = ($courseCount > 0) ? ($totalGradePoints / $courseCount) : 0;
+        echo 'Current GPA: ' . $averageGPA;
+    ?>
     <h2> Available Courses </h2>
     <form method = "post">
     <table border="1">

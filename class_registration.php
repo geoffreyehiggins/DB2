@@ -8,7 +8,6 @@
     #query to print all currently available courses
     $query = "SELECT * FROM section WHERE course_id = '$courseId'";
     $result = mysqli_query($myconnection, $query) or die("Query Failed: " . mysqli_error($myconnection));
-    $student_id = $student_id['student_id'];
    
    
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
