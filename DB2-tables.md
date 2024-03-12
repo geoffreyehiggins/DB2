@@ -16,7 +16,8 @@ Advise(instructor_id, student_id, start_date, end_date)
 TA(student_id, course_id, section_id, semester, year)
 MasterGrader(student_id, course_id, section_id, semester, year)
 UndergraduateGrader(student_id, course_id, section_id, semester, year)
-Take(student_id, course_id, section_id, semester, year, grade)
+
+*** THIS TABLE CHANGED Take(student_id, course_id, section_id, semester, year, grade)
 
 Detailed Table Info
 
@@ -60,8 +61,8 @@ student_id: varchar(10)
 total_credits: int
 Primary Key: student_id
 Foreign Key: student_id references student(student_id) ON DELETE CASCADE
-Undergraduate
 
+Undergraduate
 student_id: varchar(10)
 total_credits: int
 class_standing: varchar(10) [Check: Freshman, Sophomore, Junior, Senior]
