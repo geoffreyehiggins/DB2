@@ -23,24 +23,40 @@
             WHERE section_id = '$sectionId' AND semester = '$semester' AND year = '$year'";
             $resultEnrollmentCount = mysqli_query($myconnection, $qEnrollmentCount) or die("Query Failed: " . mysqli_error($myconnection));
             $enrollmentCount = mysqli_fetch_assoc($resultEnrollmentCount)['enrolled_count'];
+            #Check prereq
+            $qPrereq = "SELECT prereq_id FROM prereq WHERE course_id = '$courseId'";
+            $PrereqResult = mysqli_query($myconnection, $qPrereq) or die ("Query Failed: " . mysqli_error($myconnection));
+            if (mysqli_num_rows($PrereqResult) > 0)
+            {
+                $prereq_course_id = mysqli_fetch_assoc($PrereqResult)['prereq_id'];
+                $qTookPrereq = "SELECT * FROM take WHERE course_id = '$prereq_course_id' AND student_id = '$student_id' AND grade > 50";
+                $rTookPrereq = mysqli_query($myconnection, $qTookPrereq) or die("Query Failed: " . mysqli_error($myconnection));
+            }
 
-            if ($enrollmentCount >= 15) {
-                echo "Section is already full. Cannot enroll more students.";
-            } 
-            else {
-                #Query to check if specific student is already enrolled
-                $qcheckdup = "SELECT student_id FROM take 
-                        WHERE student_id = '$student_id' AND section_id = '$sectionId' AND semester = '$semester' AND year = '$year'";
-                $check = mysqli_query($myconnection, $qcheckdup) or die("Query Failed: ". mysqli_error($myconnection));
-                if(mysqli_num_rows($check) > 0)
-                {
-                    echo "Already Enrolled in this section";
-                }
-                else{
-                    $query2 = "INSERT INTO take(course_id, section_id, semester, year, student_id) 
-                            VALUES ('$courseId', '$sectionId', '$semester', '$year', '$student_id')";
-                    $result2 = mysqli_query($myconnection, $query2) or die("Query Failed: " . mysqli_error($myconnection));
-                    echo "Successfully Enrolled in Section";
+            //If statemet that checks if prereqs are NOT met otherwise can move on
+            if((mysqli_num_rows($PrereqResult) > 0) && (mysqli_num_rows($rTookPrereq) <= 0))
+            {
+                echo "You do not meet the prerequistes for this course.  Registration Failed.";
+            }
+            else{
+                if ($enrollmentCount >= 15) {
+                    echo "Section is already full. Cannot enroll more students.";
+                } 
+                else {
+                    #Query to check if specific student is already enrolled
+                    $qcheckdup = "SELECT student_id FROM take 
+                            WHERE student_id = '$student_id' AND section_id = '$sectionId' AND semester = '$semester' AND year = '$year'";
+                    $check = mysqli_query($myconnection, $qcheckdup) or die("Query Failed: ". mysqli_error($myconnection));
+                    if(mysqli_num_rows($check) > 0)
+                    {
+                        echo "Already Enrolled in this section";
+                    }
+                    else{
+                        $query2 = "INSERT INTO take(course_id, section_id, semester, year, student_id) 
+                                VALUES ('$courseId', '$sectionId', '$semester', '$year', '$student_id')";
+                        $result2 = mysqli_query($myconnection, $query2) or die("Query Failed: " . mysqli_error($myconnection));
+                        echo "Successfully Enrolled in Section";
+                    }
                 }
             }
         }
