@@ -28,7 +28,7 @@
         <input type="password" id="new_password" name="new_password"><br>
         <input type="submit" value="Change Password">
     </form>
-    <h3>Courses you are teaching</h3>
+    <h3>Current Courses:</h3>
     <table border="1">
         <tr>
             <th>Course ID</th>
@@ -49,7 +49,7 @@
             }
         ?>
     </table>
-
+    <h3>Past Courses:<h3>
     <h3>PhD students</h3>
 </body>
 </html>
