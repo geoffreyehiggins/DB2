@@ -8,6 +8,7 @@
     $totalCredits = 0;
     $totalGradePoints = 0;
     $courseCount = 0;
+    $nullcount = 0;
     $query = "SELECT * FROM course";
     $result = mysqli_query($myconnection, $query) or die("Query Failed: " . mysqli_error($myconnection));
     $query2 = "SELECT student_id FROM student WHERE email = '$email'";
@@ -22,6 +23,7 @@
     $result3 = mysqli_query($myconnection, $query3) or die ("Query Failed: " . mysqli_error($myconnection));
     
     function convertLetterGradeToGPA($letterGrade) {
+
         $gradeMapping = array(
             'A+' => 4.0,
             'A' => 4.0,
@@ -82,8 +84,14 @@
             while ($row = mysqli_fetch_assoc($result3)) {
                 $total_credits += $row['credits'];
                 $courseCount ++;
+                if($row['grade'] !== NULL)
+                {
                 $gradePoints = convertLetterGradeToGPA($row['grade']);
                 $totalGradePoints += $gradePoints;
+                }
+                else{
+                    $nullcount ++;
+                }
                 // Output each row as a table row
                 echo '<tr>';
                 echo '<td>' . $row['course_id'] . '</td>';
@@ -101,7 +109,7 @@
     <h2> Credits and GPA </h2>
     <?php
         echo 'Total Credits Taken: ' . $total_credits . '<br/>';
-        $averageGPA = ($courseCount > 0) ? ($totalGradePoints / $courseCount) : 0;
+        $averageGPA = ($courseCount > 0) ? ($totalGradePoints / ($courseCount - $nullcount)) : 0;
         echo 'Current GPA: ' . $averageGPA;
     ?>
     <h2> Available Courses </h2>
