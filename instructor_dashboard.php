@@ -20,6 +20,88 @@
                     WHERE instructor_id = '$instructor_id' 
                     AND (semester != 'Spring' AND year != 2024)";
     $rGetPast = mysqli_query($myconnection, $qGetPast) or die("Query Failed: " . mysqli_error($myconnection));
+
+    function appointAdvisorForPhDStudent() {
+        // Retrieve form data
+        $advisor_instructor_id = $_POST['advisor_instructor_id'];
+        $student_id = $_POST['student_id'];
+        $advisor_start_date = $_POST['advisor_start_date'];
+        $advisor_end_date = isset($_POST['advisor_end_date']) ? $_POST['advisor_end_date'] : null;
+    
+        // Establish connection to your database
+        $myconnection = mysqli_connect('localhost', 'root', '');
+        $mydb = mysqli_select_db ($myconnection, 'db2') or die ('Could not select database');
+    
+        // Begin transaction
+        mysqli_begin_transaction($myconnection);
+    
+        // Check if the student already has advisors
+        $check_existing_advisor_query = "SELECT COUNT(*) AS advisor_count 
+                                         FROM Advise 
+                                         WHERE student_id = '$student_id'";
+        $existing_advisor_result = mysqli_query($myconnection, $check_existing_advisor_query);
+        $existing_advisor_count = mysqli_fetch_assoc($existing_advisor_result)['advisor_count'];
+    
+        if ($existing_advisor_count >= 2) {
+            // Student already has maximum advisors
+            mysqli_rollback($myconnection);
+            echo "The student already has the maximum number of advisors (2).";
+            mysqli_close($myconnection);
+            return;
+        }
+    
+        // Check if the advisor is already appointed for the student
+        $check_existing_advisor_query = "SELECT COUNT(*) AS advisor_count 
+                                         FROM Advise 
+                                         WHERE student_id = '$student_id' 
+                                         AND instructor_id = '$advisor_instructor_id'";
+        $existing_advisor_result = mysqli_query($myconnection, $check_existing_advisor_query);
+        $existing_advisor_count = mysqli_fetch_assoc($existing_advisor_result)['advisor_count'];
+    
+        if ($existing_advisor_count > 0) {
+            // Advisor already appointed for the student, no need to overwrite
+            mysqli_rollback($myconnection);
+            echo "The advisor is already appointed for the student.";
+            mysqli_close($myconnection);
+            return;
+        }
+    
+        // Insert new advisor record into Advise table
+        $insert_advisor_query = "INSERT INTO Advise (instructor_id, student_id, start_date, end_date) 
+                                VALUES ('$advisor_instructor_id', '$student_id', '$advisor_start_date', " . ($advisor_end_date ? "'$advisor_end_date'" : "NULL") . ")";
+        $advisor_result = mysqli_query($myconnection, $insert_advisor_query);
+    
+        // Check if the advisor appointment was successful
+        if ($advisor_result === false) {
+            // Advisor appointment failed
+            $errorMessage = "Advisor appointment failed: " . mysqli_error($myconnection);
+            
+            // Rollback transaction
+            mysqli_rollback($myconnection);
+            
+            // Optionally, log the error
+            error_log($errorMessage);
+            
+            // Send a response to the client
+            http_response_code(500); // Internal Server Error
+            echo "An error occurred while appointing advisor. Please try again later.";
+        } else {
+            // Commit transaction
+            mysqli_commit($myconnection);
+            
+            // Advisor appointment successful
+            echo "Advisor appointed successfully.";
+        }
+    
+        mysqli_close($myconnection);
+    }
+    
+    // Check if the button to appoint advisor is clicked
+    if(isset($_POST['appoint_advisor'])) {
+        // Call the function to appoint advisor for PhD student
+        appointAdvisorForPhDStudent();
+    }
+    
 ?>
 
 <!DOCTYPE html>
@@ -87,5 +169,19 @@
         ?>
     </table>
     <h3>PhD students</h3>
+
+    <!-- Form to appoint instructors as advisors for PhD students -->
+    <h2>Appoint Advisor for PhD Student</h2>
+    <form method="post">
+        <label for="advisor_instructor_id">Instructor ID:</label>
+        <input type="text" id="advisor_instructor_id" name="advisor_instructor_id" required><br>
+        <label for="student_id">Student ID:</label>
+        <input type="text" id="student_id" name="student_id" required><br>
+        <label for="advisor_start_date">Start Date:</label>
+        <input type="date" id="advisor_start_date" name="advisor_start_date" required><br>
+        <label for="advisor_end_date">End Date (Optional):</label>
+        <input type="date" id="advisor_end_date" name="advisor_end_date"><br>
+        <button type="submit" name="appoint_advisor">Appoint Advisor</button>
+    </form>
 </body>
 </html>
