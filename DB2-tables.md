@@ -16,8 +16,7 @@ Advise(instructor_id, student_id, start_date, end_date)
 TA(student_id, course_id, section_id, semester, year)
 MasterGrader(student_id, course_id, section_id, semester, year)
 UndergraduateGrader(student_id, course_id, section_id, semester, year)
-
-*** THIS TABLE CHANGED Take(student_id, course_id, section_id, semester, year, grade)
+Take(student_id, course_id, section_id, semester, year, grade)
 
 Detailed Table Info
 
