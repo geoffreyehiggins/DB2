@@ -7,6 +7,8 @@ $section_id = $_GET['section_id'];
 $semester = $_GET['semester'];
 $year = $_GET['year'];
 
+echo "Debugging: course_id = $course_id, section_id = $section_id, semester = $semester, year = $year<br>";
+
 //Query that retrieves student_id, grade, and name
 $qGetStudentInfo = "SELECT t.student_id, t.grade, s.name
                     FROM take t

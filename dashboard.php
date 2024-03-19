@@ -21,10 +21,29 @@
            WHERE take.student_id = '$student_id'";
     $result3 = mysqli_query($myconnection, $query3) or die ("Query Failed: " . mysqli_error($myconnection));
     
-    function convertPercentageToGPA($percentage) {
-        $gpa = $percentage/100;
-        $gpa = $gpa * 4;
-        return $gpa;
+    function convertLetterGradeToGPA($letterGrade) {
+        $gradeMapping = array(
+            'A+' => 4.0,
+            'A' => 4.0,
+            'A-' => 3.7,
+            'B+' => 3.3,
+            'B' => 3.0,
+            'B-' => 2.7,
+            'C+' => 2.3,
+            'C' => 2.0,
+            'C-' => 1.7,
+            'D+' => 1.3,
+            'D' => 1.0,
+            'F' => 0.0
+        );
+        $letterGrade = strtoupper($letterGrade);
+    
+        // Check if the letter grade exists in the mapping, if not, return 0.0
+        if (array_key_exists($letterGrade, $gradeMapping)) {
+            return $gradeMapping[$letterGrade];
+        } else {
+            return 0.0; // Return 0.0 for unknown grades
+        }
     }
 ?>
 
@@ -63,7 +82,7 @@
             while ($row = mysqli_fetch_assoc($result3)) {
                 $total_credits += $row['credits'];
                 $courseCount ++;
-                $gradePoints = convertPercentageToGPA($row['grade']);
+                $gradePoints = convertLetterGradeToGPA($row['grade']);
                 $totalGradePoints += $gradePoints;
                 // Output each row as a table row
                 echo '<tr>';
