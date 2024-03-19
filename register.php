@@ -39,7 +39,7 @@ if (mysqli_query($myconnection, $sql_student)) {
                 echo "Error: " . $sql_undergraduate . "<br>" . mysqli_error($myconnection);
             }
             break;
-        case 'master':
+        case 'masters':
             $sql_master = "INSERT INTO master (student_id) VALUES ('$student_id')";
             if (mysqli_query($myconnection, $sql_master)) {
                 echo "Inserted into master table successfully.";
