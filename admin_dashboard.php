@@ -209,6 +209,112 @@
         appointAdvisorForPhDStudent();
     }    
 
+    function assignGraderToSection() {
+        // Retrieve form data
+        $grader_id = $_POST['student_id'];
+        $course_id = $_POST['course_id'];
+        $section_id = $_POST['section_id'];
+        $semester = $_POST['semester'];
+        $year = $_POST['year'];
+    
+        // Establish connection to your database
+        $myconnection = mysqli_connect('localhost', 'root', '');
+    
+        $mydb = mysqli_select_db ($myconnection, 'db2') or die ('Could not select database');
+    
+        // Check if the section exists
+        $check_section_query = "SELECT * FROM section WHERE course_id = '$course_id' AND section_id = '$section_id' AND semester = '$semester' AND year = '$year'";
+        $section_result = mysqli_query($myconnection, $check_section_query);
+    
+        if (mysqli_num_rows($section_result) == 0) {
+            echo "Section does not exist.";
+            mysqli_close($myconnection);
+            return;
+        }
+    
+        // Check if the class has at least 5 students and no more than 10 students enrolled
+        $check_enrollment_query = "SELECT COUNT(*) AS enrolled_count FROM take 
+            WHERE course_id = '$course_id' AND section_id = '$section_id' AND semester = '$semester' AND year = '$year'";
+        $enrollment_result = mysqli_query($myconnection, $check_enrollment_query);
+        $enrollment_count = mysqli_fetch_assoc($enrollment_result)['enrolled_count'];
+    
+        if ($enrollment_count < 5) {
+            echo "The class must have at least 5 students enrolled before assigning a grader.";
+            mysqli_close($myconnection);
+            return;
+        } elseif ($enrollment_count > 10) {
+            echo "The class cannot have more than 10 students enrolled before assigning a grader.";
+            mysqli_close($myconnection);
+            return;
+        }
+        
+         // Check if the section already has a grader assigned
+        $check_existing_grader_query = "SELECT * FROM mastergrader WHERE section_id = '$section_id' AND semester = '$semester' AND year = '$year' 
+                                        UNION 
+                                        SELECT * FROM undergraduategrader WHERE section_id = '$section_id' AND semester = '$semester' AND year = '$year'";
+        $existing_grader_result = mysqli_query($myconnection, $check_existing_grader_query);
+
+        if (mysqli_num_rows($existing_grader_result) > 0) {
+        echo "The section already has a grader assigned.";
+        mysqli_close($myconnection);
+        return;
+        }
+
+        //Check if the grader is already grading another class that semester
+        $check_existing_grader_query = "SELECT * FROM mastergrader WHERE student_id = '$grader_id' AND semester = '$semester' AND year = '$year' 
+                                    UNION 
+                                    SELECT * FROM undergraduategrader WHERE student_id = '$grader_id' AND semester = '$semester' AND year = '$year'";
+        $existing_grader_result = mysqli_query($myconnection, $check_existing_grader_query);
+
+        if (mysqli_num_rows($existing_grader_result) > 0) {
+            echo "The selected grader is already listed as a grader for another section in the same semester and year.";
+            mysqli_close($myconnection);
+            return;
+        }
+
+        
+        // Check if the student is a master's student
+        $check_master_student_query = "SELECT * FROM master WHERE student_id = '$grader_id'";
+        $master_student_result = mysqli_query($myconnection, $check_master_student_query);
+    
+        if (mysqli_num_rows($master_student_result) > 0) {
+            // The selected grader is a master's student, insert into mastergrader table
+            $insert_grader_query = "INSERT INTO mastergrader (student_id, course_id, section_id, semester, year) 
+                                    VALUES ('$grader_id', '$course_id', '$section_id', '$semester', '$year')";
+        } else {
+            // The selected grader is not a master's student, check if they meet the grade requirement
+            $check_student_grade_query = "SELECT grade FROM take WHERE student_id = '$grader_id' AND course_id = '$course_id' AND grade IN ('A-', 'A', 'A+')";
+            $student_grade_result = mysqli_query($myconnection, $check_student_grade_query);
+    
+            if (mysqli_num_rows($student_grade_result) == 0) {
+                echo "The selected grader does not meet the grade or rank requirement.";
+                mysqli_close($myconnection);
+                return;
+            }
+    
+            // The selected grader is an undergraduate student meeting the grade requirement, insert into undergraduategrader table
+            $insert_grader_query = "INSERT INTO undergraduategrader (student_id, course_id, section_id, semester, year) 
+                                    VALUES ('$grader_id', '$course_id', '$section_id', '$semester', '$year')";
+        }
+    
+        // Perform the query
+        $result = mysqli_query($myconnection, $insert_grader_query);
+    
+        // Check if the query was successful
+        if ($result) {
+            echo "Grader assigned successfully.";
+        } else {
+            echo "Failed to assign grader.";
+        }
+    
+        mysqli_close($myconnection);
+    }
+    
+    if(isset($_POST['assign_grader'])) {
+        // Call the function to assign grader to section
+        assignGraderToSection();
+    }
+
 ?>
 
 <!DOCTYPE html>
@@ -272,6 +378,19 @@
         <button type="submit" name="appoint_advisor">Appoint Advisor</button>
     </form>
 
-
+    <h2>Assign Grader to Class Section</h2>
+    <form method="post">
+    <label for="student_id">Student ID:</label>
+    <input type="text" id="student_id" name="student_id" required><br>
+    <label for="course_id_grader">Course ID:</label>
+    <input type="text" id="course_id_grader" name="course_id" required><br>
+    <label for="section_id_grader">Section ID:</label>
+    <input type="text" id="section_id_grader" name="section_id" required><br>
+    <label for="semester_grader">Semester:</label>
+    <input type="text" id="semester_grader" name="semester" required><br>
+    <label for="year_grader">Year:</label>
+    <input type="number" id="year_grader" name="year" required><br>
+    <button type="submit" name="assign_grader">Assign Grader</button>
+</form>
 </body>
 </html>
