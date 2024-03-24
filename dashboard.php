@@ -109,8 +109,14 @@
     <h2> Credits and GPA </h2>
     <?php
         echo 'Total Credits Taken: ' . $total_credits . '<br/>';
-        $averageGPA = ($courseCount > 0) ? ($totalGradePoints / ($courseCount - $nullcount)) : 0;
-        echo 'Current GPA: ' . $averageGPA;
+        if($courseCount - $nullcount <= 0)
+        {
+            echo "Current GPA: N/A";
+        }
+        else{
+            $averageGPA = ($courseCount > 0) ? ($totalGradePoints / ($courseCount - $nullcount)) : 0;
+            echo 'Current GPA: ' . $averageGPA;
+        }
     ?>
     <h2> Available Courses </h2>
     <form method = "post">
