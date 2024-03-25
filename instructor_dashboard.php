@@ -75,7 +75,8 @@
                 mysqli_close($myconnection);
                 return;
             }
-        } else {
+        } 
+        if($existing_advisor_count >= 2) {
             mysqli_rollback($myconnection);
             echo "The student already has the maximum number of advisors (2).";
             mysqli_close($myconnection);
