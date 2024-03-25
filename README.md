@@ -1,2 +1,3 @@
 To use this project, clone this repository to your local machine, and place the files in the code section of XAMPP's htdocs directory.  From there you must start the Apache and MySQL modules in the XAMPP control panel.  Next you must build the database using the .sql file located in this repository.  By running that command in a new database at localhost/phpmyadmin, the database will be built in the structure needed to run the code.  Lastly, you can access the UI and interact with the database at localhost/code once the database is built and the code files are placed in the correct directory: htdocs/code.
+
 Developers: Geoffrey Higgins, Anthony Terravecchia, and Enrico Nuttoli
