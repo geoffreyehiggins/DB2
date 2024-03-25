@@ -4,7 +4,7 @@ $mydb = mysqli_select_db($myconnection, 'db2') or die ('Could not select databas
 
 function displayMergedTable($myconnection) {
     // Query to select records from Take table joined with Student table
-    $qSelectMerged = "SELECT T.student_id, T.course_id AS course_id, T.section_id AS section_id, T.semester AS semester, T.year AS `year`, T.grade, S.name, S.email, S.dept_name
+    $qSelectMerged = "SELECT T.student_id, T.course_id AS course_id, T.section_id AS section_id, T.semester AS semester, T.year AS year, T.grade, S.name, S.email, S.dept_name
                       FROM Take T
                       INNER JOIN Student S ON T.student_id = S.student_id";
     $rSelectMerged = mysqli_query($myconnection, $qSelectMerged) or die("Query Failed: " . mysqli_error($myconnection));
@@ -36,8 +36,23 @@ function displayMergedTable($myconnection) {
     echo "<tr><th>Student ID</th><th>Name</th><th>Grade</th></tr>";
     while ($row = mysqli_fetch_assoc($rSelectMerged)) {
         // Apply filtering
-        echo $row['course_id'][0];
+        // echo $row['course_id'];
+
+        /*
+        if(strcmp(trim($row["course_id"]), trim($course_id)) == 0) {
+            echo "same";
+        } else {
+            echo "diff: ";
+            echo strcmp(trim($row["course_id"]), trim($course_id[0]));
+            echo ", row[id] len: ";
+            echo strlen(trim($row["course_id"]));
+            echo ", stored id len: ";
+            echo strlen($course_id);
+        }
+        echo "<br>";
         // echo $row['section_id'];
+        */
+
         // echo $row['semester'];
         //echo $row['year'][0];
         //echo $row['year'][1];
@@ -47,8 +62,18 @@ function displayMergedTable($myconnection) {
         //    echo $val;
         //}
 
+        /*
+        if(strcmp(trim($row['course_id']), trim($course_id)) == 0) {
+            echo "same1";
+        } else {
+            echo "diff1";
+        }*/
 
-        if ($row['course_id'] == $course_id && $row['section_id'] == $section_id && $row['semester'] == $semester && $row['year'] == $year) {
+
+        if (trim($row['course_id']) == trim($course_id) 
+            && trim($row['section_id']) == trim($section_id) 
+            && trim($row['semester']) == trim($semester) 
+            && trim($row['year']) == trim($year)) {
             echo "<tr>";
             echo "<td>{$row['student_id']}</td>";
             echo "<td>{$row['name']}</td>";
