@@ -42,7 +42,7 @@
         $existing_advisor_result = mysqli_query($myconnection, $check_existing_advisor_query);
         $existing_advisor_count = mysqli_fetch_assoc($existing_advisor_result)['advisor_count'];
     
-        if ($existing_advisor_count == 1) {
+        if ($existing_advisor_count == 1 || $existing_advisor_count == 2) {
                 // Student already has maximum advisors
                 // Check if the advisor is already appointed for the student
             $check_existing_advisor_query = "SELECT * 
@@ -74,7 +74,7 @@
         
                 mysqli_close($myconnection);
                 return;
-            }
+            } 
         } 
         if($existing_advisor_count >= 2) {
             mysqli_rollback($myconnection);
