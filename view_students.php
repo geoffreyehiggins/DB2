@@ -31,7 +31,7 @@ function displayMergedTable($myconnection) {
 
     // Display merged table
     echo "";
-    echo "<h2>Merged Table</h2>";
+    echo "<h2>Student Records</h2>";
     echo "<table border='1'>";
     echo "<tr><th>Student ID</th><th>Name</th><th>Grade</th><th>GPA</th><th>Credits</th></tr>";
 
@@ -101,7 +101,6 @@ function convertLetterGradeToGPA($letterGrade) {
     }
 }
 
-echo "Debugging:<br>";
 
 // Check if the form is submitted
 if (isset($_POST['submit'])) {
