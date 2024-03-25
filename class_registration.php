@@ -28,7 +28,7 @@
             if (mysqli_num_rows($PrereqResult) > 0)
             {
                 $prereq_course_id = mysqli_fetch_assoc($PrereqResult)['prereq_id'];
-                $qTookPrereq = "SELECT * FROM take WHERE course_id = '$prereq_course_id' AND student_id = '$student_id' AND grade > 50";
+                $qTookPrereq = "SELECT * FROM take WHERE course_id = '$prereq_course_id' AND student_id = '$student_id' AND grade != 'F'";
                 $rTookPrereq = mysqli_query($myconnection, $qTookPrereq) or die("Query Failed: " . mysqli_error($myconnection));
             }
             $qEnrollmentCountSemester = "SELECT COUNT(*) AS semester_enrolled_count 
