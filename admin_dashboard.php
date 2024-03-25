@@ -1,84 +1,89 @@
 <?php
-    session_start();
-    $admin_email = $_SESSION['email'];
-    error_reporting(E_ALL);
-    ini_set('display_errors', 1);
+session_start();
+$admin_email = $_SESSION['email'];
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 
-    function createCourseSection() {
-        // Retrieve form data
-        $course_id = $_POST['course_id'];
-        $section_id = $_POST['section_id'];
-        $semester = $_POST['semester'];
-        $year = $_POST['year'];
-        $instructor_id = $_POST['instructor_id'];
-        $classroom_id = $_POST['classroom_id'];
-        $time_slot_id = $_POST['time_slot_id'];
-    
-        // Establish connection to your database
-        $myconnection = mysqli_connect('localhost', 'root', '');
-    
-        $mydb = mysqli_select_db ($myconnection, 'db2') or die ('Could not select database');
-    
-        // Retrieve existing time slots taught by the instructor
-        $existing_slots_query = "SELECT time_slot_id 
-                                 FROM section 
-                                 WHERE instructor_id = '$instructor_id' 
-                                 AND semester = '$semester' 
-                                 AND year = '$year'";
-        $existing_slots_result = mysqli_query($myconnection, $existing_slots_query);
-        $existing_slots = [];
-        while ($row = mysqli_fetch_assoc($existing_slots_result)) {
-            $existing_slots[] = $row['time_slot_id'];
-        }
-    
-        // Define consecutive pairs of time slots
-        $consecutive_pairs = array(
-            'TS1' => 'TS2',
-            'TS2' => 'TS3',
-            'TS4' => 'TS5'
-            // Add more pairs as needed
-        );
-    
-        // Check if the new time slot is consecutive with any existing time slots
-        $consecutive = false;
-        foreach ($existing_slots as $slot) {
-            if (isset($consecutive_pairs[$slot]) && $consecutive_pairs[$slot] === $time_slot_id) {
-                $consecutive = true;
-                break;
-            }
-        }
-    
-        if (!$consecutive) {
-            // The new time slot is not consecutive with any existing time slots
-            echo "The new section must have a consecutive time slot with existing sections.";
+// Define consecutive pairs of time slots
+$consecutive_pairs = array(
+    'TS1' => 'TS2',
+    'TS2' => 'TS3',
+    'TS4' => 'TS5'
+    // Add more pairs as needed
+);
+
+function createCourseSection() {
+    global $consecutive_pairs;
+    // Retrieve form data
+    $course_id = $_POST['course_id'];
+    $section_id = $_POST['section_id'];
+    $semester = $_POST['semester'];
+    $year = $_POST['year'];
+    $instructor_id = $_POST['instructor_id'];
+    $classroom_id = $_POST['classroom_id'];
+    $time_slot_id = $_POST['time_slot_id'];
+
+    // Establish connection to your database
+    $myconnection = mysqli_connect('localhost', 'root', '');
+
+    $mydb = mysqli_select_db ($myconnection, 'db2') or die ('Could not select database');
+
+    // Retrieve the number of classes taught by the instructor
+    $class_count_query = "SELECT COUNT(*) AS class_count FROM section WHERE instructor_id = '$instructor_id' AND semester = '$semester' AND year = '$year'";
+    $class_count_result = mysqli_query($myconnection, $class_count_query);
+    $class_count = mysqli_fetch_assoc($class_count_result)['class_count'];
+
+    echo "class count: ";
+    echo $class_count;
+    // Check if the instructor teaches more than two classes
+    if ($class_count >= 2) {
+        echo "Instructors cannot be assigned to more than two classes per semester.";
+        mysqli_close($myconnection);
+        return;
+    }
+
+    // Check if the instructor teaches two classes and if their time slots are consecutive
+    if ($class_count == 1) {
+        // Retrieve the time slot for the existing class
+        $existing_time_slot_query = "SELECT time_slot_id FROM section WHERE instructor_id = '$instructor_id' AND year = '$year'";
+        $existing_time_slot_result = mysqli_query($myconnection, $existing_time_slot_query);
+
+        // Fetch the time slot for the existing class
+        $existing_time_slot = mysqli_fetch_assoc($existing_time_slot_result)['time_slot_id'];
+
+        // Check if the current and existing time slots are consecutive
+        if (!isset($consecutive_pairs[$existing_time_slot]) || $consecutive_pairs[$existing_time_slot] !== $time_slot_id) {
+            echo "Instructors teaching two classes must teach consecutive time slots.";
+            mysqli_close($myconnection);
             return;
         }
-    
-        // Insert new course section into the Section table
-        $sql = "INSERT INTO section (course_id, section_id, semester, year, instructor_id, classroom_id, time_slot_id) 
-                VALUES ('$course_id', '$section_id', '$semester', '$year', '$instructor_id', '$classroom_id', '$time_slot_id')";
-    
-        // Perform the query
-        $result = mysqli_query($myconnection, $sql);
-    
-        // Check if the query was successful
-        if ($result === false) {
-            // Query failed
-            $errorMessage = "Query Failed: " . mysqli_error($myconnection);
-            
-            // Optionally, log the error
-            error_log($errorMessage);
-            
-            // Send a response to the client
-            http_response_code(500); // Internal Server Error
-            echo "An error occurred. Please try again later.";
-        } else {
-            // Query was successful
-            echo "Query executed successfully.";
-        }
-    
-        mysqli_close($myconnection);
     }
+
+    // Proceed with assignment
+    $sql = "INSERT INTO section (course_id, section_id, semester, year, instructor_id, classroom_id, time_slot_id) 
+            VALUES ('$course_id', '$section_id', '$semester', '$year', '$instructor_id', '$classroom_id', '$time_slot_id')";
+
+    // Perform the query
+    $result = mysqli_query($myconnection, $sql);
+
+    // Check if the query was successful
+    if ($result === false) {
+        // Query failed
+        $errorMessage = "Query Failed: " . mysqli_error($myconnection);
+
+        // Optionally, log the error
+        error_log($errorMessage);
+
+        // Send a response to the client
+        http_response_code(500); // Internal Server Error
+        echo "An error occurred. Please try again later.";
+    } else {
+        // Query was successful
+        echo "Query executed successfully.";
+    }
+
+    mysqli_close($myconnection);
+}
 
     function assignTAToSection() {
         // Retrieve form data
@@ -155,46 +160,77 @@
         // Begin transaction
         mysqli_begin_transaction($myconnection);
     
-        // Check if the student already has an advisor
+        // Check if the student already has advisors
         $check_existing_advisor_query = "SELECT COUNT(*) AS advisor_count 
                                          FROM Advise 
                                          WHERE student_id = '$student_id'";
         $existing_advisor_result = mysqli_query($myconnection, $check_existing_advisor_query);
         $existing_advisor_count = mysqli_fetch_assoc($existing_advisor_result)['advisor_count'];
     
+        if ($existing_advisor_count >= 2) {
+            // Student already has maximum advisors
+            // Check if the advisor is already appointed for the student
+        $check_existing_advisor_query = "SELECT * 
+                                         FROM Advise 
+                                         WHERE student_id = '$student_id' 
+                                         AND instructor_id = '$advisor_instructor_id'";
+        $existing_advisor_result = mysqli_query($myconnection, $check_existing_advisor_query);
+        $existing_advisor_count = mysqli_num_rows($existing_advisor_result);
+
+        echo $existing_advisor_count;
         if ($existing_advisor_count > 0) {
-            // Student already has an advisor, update existing record in Advise table
+            // Advisor already appointed for the student, update the record
             $update_advisor_query = "UPDATE Advise 
-                                     SET instructor_id = '$advisor_instructor_id', 
-                                         start_date = '$advisor_start_date', 
-                                         end_date = " . ($advisor_end_date ? "'$advisor_end_date'" : "NULL") . " 
-                                     WHERE student_id = '$student_id'";
-            $advisor_result = mysqli_query($myconnection, $update_advisor_query);
-        } else {
-            // Student does not have an advisor, insert new record into Advise table
-            $insert_advisor_query = "INSERT INTO Advise (instructor_id, student_id, start_date, end_date) 
-                                    VALUES ('$advisor_instructor_id', '$student_id', '$advisor_start_date', " . ($advisor_end_date ? "'$advisor_end_date'" : "NULL") . ")";
-            $advisor_result = mysqli_query($myconnection, $insert_advisor_query);
+                                    SET start_date = '$advisor_start_date', end_date = " . ($advisor_end_date ? "'$advisor_end_date'" : "NULL") . " 
+                                    WHERE student_id = '$student_id' AND instructor_id = '$advisor_instructor_id'";
+            $update_result = mysqli_query($myconnection, $update_advisor_query);
+    
+            if ($update_result === false) {
+                // Update failed
+                $errorMessage = "Failed to update advisor: " . mysqli_error($myconnection);
+                mysqli_rollback($myconnection);
+                error_log($errorMessage);
+                http_response_code(500); // Internal Server Error
+                echo "An error occurred while updating advisor. Please try again later.";
+            } else {
+                // Update successful
+                mysqli_commit($myconnection);
+                echo "Advisor updated successfully.";
+            }
+    
+            mysqli_close($myconnection);
+            return;
         }
+            mysqli_rollback($myconnection);
+            echo "The student already has the maximum number of advisors (2).";
+            mysqli_close($myconnection);
+            return;
+        }
+    
+    
+        // Insert new advisor record into Advise table
+        $insert_advisor_query = "INSERT INTO Advise (instructor_id, student_id, start_date, end_date) 
+                                VALUES ('$advisor_instructor_id', '$student_id', '$advisor_start_date', " . ($advisor_end_date ? "'$advisor_end_date'" : "NULL") . ")";
+        $advisor_result = mysqli_query($myconnection, $insert_advisor_query);
     
         // Check if the advisor appointment was successful
         if ($advisor_result === false) {
             // Advisor appointment failed
             $errorMessage = "Advisor appointment failed: " . mysqli_error($myconnection);
-            
+    
             // Rollback transaction
             mysqli_rollback($myconnection);
-            
+    
             // Optionally, log the error
             error_log($errorMessage);
-            
+    
             // Send a response to the client
             http_response_code(500); // Internal Server Error
             echo "An error occurred while appointing advisor. Please try again later.";
         } else {
             // Commit transaction
             mysqli_commit($myconnection);
-            
+    
             // Advisor appointment successful
             echo "Advisor appointed successfully.";
         }
