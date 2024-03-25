@@ -44,27 +44,44 @@
     
         if ($existing_advisor_count >= 2) {
             // Student already has maximum advisors
+            // Check if the advisor is already appointed for the student
+        $check_existing_advisor_query = "SELECT * 
+                                         FROM Advise 
+                                         WHERE student_id = '$student_id' 
+                                         AND instructor_id = '$advisor_instructor_id'";
+        $existing_advisor_result = mysqli_query($myconnection, $check_existing_advisor_query);
+        $existing_advisor_count = mysqli_num_rows($existing_advisor_result);
+        echo "advisor count: ";
+        echo $existing_advisor_count;
+        if ($existing_advisor_count > 0) {
+            // Advisor already appointed for the student, update the record
+            $update_advisor_query = "UPDATE Advise 
+                                    SET start_date = '$advisor_start_date', end_date = " . ($advisor_end_date ? "'$advisor_end_date'" : "NULL") . " 
+                                    WHERE student_id = '$student_id' AND instructor_id = '$advisor_instructor_id'";
+            $update_result = mysqli_query($myconnection, $update_advisor_query);
+    
+            if ($update_result === false) {
+                // Update failed
+                $errorMessage = "Failed to update advisor: " . mysqli_error($myconnection);
+                mysqli_rollback($myconnection);
+                error_log($errorMessage);
+                http_response_code(500); // Internal Server Error
+                echo "An error occurred while updating advisor. Please try again later.";
+            } else {
+                // Update successful
+                mysqli_commit($myconnection);
+                echo "Advisor updated successfully.";
+            }
+    
+            mysqli_close($myconnection);
+            return;
+        }
             mysqli_rollback($myconnection);
             echo "The student already has the maximum number of advisors (2).";
             mysqli_close($myconnection);
             return;
         }
     
-        // Check if the advisor is already appointed for the student
-        $check_existing_advisor_query = "SELECT COUNT(*) AS advisor_count 
-                                         FROM Advise 
-                                         WHERE student_id = '$student_id' 
-                                         AND instructor_id = '$advisor_instructor_id'";
-        $existing_advisor_result = mysqli_query($myconnection, $check_existing_advisor_query);
-        $existing_advisor_count = mysqli_fetch_assoc($existing_advisor_result)['advisor_count'];
-    
-        if ($existing_advisor_count > 0) {
-            // Advisor already appointed for the student, no need to overwrite
-            mysqli_rollback($myconnection);
-            echo "The advisor is already appointed for the student.";
-            mysqli_close($myconnection);
-            return;
-        }
     
         // Insert new advisor record into Advise table
         $insert_advisor_query = "INSERT INTO Advise (instructor_id, student_id, start_date, end_date) 
@@ -75,26 +92,27 @@
         if ($advisor_result === false) {
             // Advisor appointment failed
             $errorMessage = "Advisor appointment failed: " . mysqli_error($myconnection);
-            
+    
             // Rollback transaction
             mysqli_rollback($myconnection);
-            
+    
             // Optionally, log the error
             error_log($errorMessage);
-            
+    
             // Send a response to the client
             http_response_code(500); // Internal Server Error
             echo "An error occurred while appointing advisor. Please try again later.";
         } else {
             // Commit transaction
             mysqli_commit($myconnection);
-            
+    
             // Advisor appointment successful
             echo "Advisor appointed successfully.";
         }
     
         mysqli_close($myconnection);
     }
+    
     
     // Check if the button to appoint advisor is clicked
     if(isset($_POST['appoint_advisor'])) {
@@ -169,6 +187,31 @@
         ?>
     </table>
     <h3>PhD students</h3>
+
+    <table border="1">
+        <tr>
+            <th>Student ID</th>
+            <th>Start Date</th>
+            <th>End Date</th>
+        </tr>
+
+        <?php
+        // Query to retrieve advised students
+        $qGetAdvisedStudents = "SELECT student_id, start_date, end_date 
+                                FROM Advise 
+                                WHERE instructor_id = '$instructor_id'";
+        $rGetAdvisedStudents = mysqli_query($myconnection, $qGetAdvisedStudents) or die("Query Failed: " . mysqli_error($myconnection));
+
+        // Display advised students
+        while ($row = mysqli_fetch_assoc($rGetAdvisedStudents)) {
+            echo "<tr>";
+            echo "<td>{$row['student_id']}</td>";
+            echo "<td>{$row['start_date']}</td>";
+            echo "<td>{$row['end_date']}</td>";
+            echo "</tr>";
+        }
+        ?>
+    </table>
 
     <!-- Form to appoint instructors as advisors for PhD students -->
     <h2>Appoint Advisor for PhD Student</h2>
