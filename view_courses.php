@@ -59,14 +59,6 @@
     <p>Email: <?php echo $email; ?></p>
     <p>ID: <?php echo $student_id; ?></p>
 
-    <h3>Change Password</h3>
-    <form action="password_change.php" method="post">
-        <label for="current_password">Current Password:</label><br>
-        <input type="password" id="current_password" name="current_password"><br>
-        <label for="new_password">New Password:</label><br>
-        <input type="password" id="new_password" name="new_password"><br><br>
-        <input type="submit" value="Change Password">
-    </form>
     <br>
     <h2> Taken Courses </h2>
     <table border="1">
@@ -118,26 +110,6 @@
             echo 'Current GPA: ' . $averageGPA;
         }
     ?>
-    <h2> Available Courses </h2>
-    <form method = "post">
-    <table border="1">
-        <tr>
-            <th>Course ID</th>
-            <th>Course Name</th>
-            <th>Credits</th> 
-        </tr>
 
-        <?php
-            while($row = mysqli_fetch_assoc($result)){
-                echo "<tr>";
-                echo "<td>{$row['course_id']}</td>";
-                echo "<td>{$row['course_name']}</td>";
-                echo "<td>{$row['credits']}</td>";
-                echo "<td><a href='class_registration.php?course_id={$row['course_id']}'>Register</a></td>";
-                echo "</tr>";
-            }
-        ?>
-    </table>
-    </form>
 </body>
 </html>

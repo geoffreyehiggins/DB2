@@ -18,7 +18,7 @@ if(mysqli_num_rows($result) == 0) {
     if($row['password'] != $password) {
         echo 'Incorrect Password';
     }  else {
-            if($row['type'] == "student") {
+            if($row['type'] == "undergraduate" || $row['type'] == "masters" || $row['type'] == "phd") {
                 echo 'student';
                 return "student";
             } else if($row['type'] == "instructor") {
