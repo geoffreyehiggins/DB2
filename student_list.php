@@ -40,7 +40,7 @@
         $studentData = array(
             'name' => $row['name'],
             'grade' => $row['grade'],
-            'credits' => $totalCredits * 3, // Multiply total credits by 3 to get total credit hours
+            'credits' => $totalCredits, // Multiply total credits by 3 to get total credit hours
             'gpa' => $gpa
         );
         $data[] = $studentData;
